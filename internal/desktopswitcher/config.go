@@ -14,17 +14,11 @@ import (
 const configFileName = "config.toml"
 
 type Config struct {
-	SwitchDelayMs            int
-	FocusTaskbarBeforeSwitch bool
-	DirectSwitching          bool
-	Hotkeys                  map[string]int
+	Hotkeys map[string]int
 }
 
 type configFile struct {
-	SwitchDelayMs            *int
-	FocusTaskbarBeforeSwitch *bool
-	DirectSwitching          *bool
-	Hotkeys                  map[string]int
+	Hotkeys map[string]int
 }
 
 func defaultConfig() Config {
@@ -34,10 +28,7 @@ func defaultConfig() Config {
 	}
 
 	return Config{
-		SwitchDelayMs:            75,
-		FocusTaskbarBeforeSwitch: false,
-		DirectSwitching:          true,
-		Hotkeys:                  hotkeys,
+		Hotkeys: hotkeys,
 	}
 }
 
@@ -54,35 +45,14 @@ func loadConfig(path string) (Config, string, error) {
 		return Config{}, "", err
 	}
 
-	if raw.SwitchDelayMs != nil {
-		cfg.SwitchDelayMs = *raw.SwitchDelayMs
-	}
-	if raw.FocusTaskbarBeforeSwitch != nil {
-		cfg.FocusTaskbarBeforeSwitch = *raw.FocusTaskbarBeforeSwitch
-	}
-	if raw.DirectSwitching != nil {
-		cfg.DirectSwitching = *raw.DirectSwitching
-	}
 	if raw.Hotkeys != nil {
 		cfg.Hotkeys = raw.Hotkeys
-	}
-
-	if cfg.SwitchDelayMs < 0 {
-		return Config{}, "", errors.New("switchDelayMs cannot be negative")
 	}
 
 	return cfg, path, nil
 }
 
-func resolveConfigPath(flagPath string) (string, error) {
-	if flagPath != "" {
-		return filepath.Abs(flagPath)
-	}
-
-	if envPath := os.Getenv("DESKTOP_SWITCHER_CONFIG"); envPath != "" {
-		return filepath.Abs(envPath)
-	}
-
+func resolveConfigPath() (string, error) {
 	base, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
@@ -115,15 +85,6 @@ func ensureConfigFile(path string) error {
 }
 
 func writeConfig(out io.Writer, cfg Config) error {
-	if _, err := fmt.Fprintf(out, "switchDelayMs = %d\n", cfg.SwitchDelayMs); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "focusTaskbarBeforeSwitch = %t\n", cfg.FocusTaskbarBeforeSwitch); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "directSwitching = %t\n\n", cfg.DirectSwitching); err != nil {
-		return err
-	}
 	if _, err := fmt.Fprintln(out, "[hotkeys]"); err != nil {
 		return err
 	}
@@ -192,28 +153,7 @@ func parseConfigTOML(data string, cfg *configFile) error {
 			continue
 		}
 
-		switch parsedKey {
-		case "switchDelayMs":
-			delay, err := strconv.Atoi(value)
-			if err != nil {
-				return fmt.Errorf("line %d: switchDelayMs must be an integer", lineNo+1)
-			}
-			cfg.SwitchDelayMs = &delay
-		case "focusTaskbarBeforeSwitch":
-			enabled, err := strconv.ParseBool(value)
-			if err != nil {
-				return fmt.Errorf("line %d: focusTaskbarBeforeSwitch must be true or false", lineNo+1)
-			}
-			cfg.FocusTaskbarBeforeSwitch = &enabled
-		case "directSwitching":
-			enabled, err := strconv.ParseBool(value)
-			if err != nil {
-				return fmt.Errorf("line %d: directSwitching must be true or false", lineNo+1)
-			}
-			cfg.DirectSwitching = &enabled
-		default:
-			return fmt.Errorf("line %d: unknown config key %q", lineNo+1, parsedKey)
-		}
+		return fmt.Errorf("line %d: unknown config key %q", lineNo+1, parsedKey)
 	}
 
 	return nil

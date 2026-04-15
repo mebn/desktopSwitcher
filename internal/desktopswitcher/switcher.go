@@ -3,15 +3,13 @@ package desktopswitcher
 import (
 	"fmt"
 	"os"
-	"syscall"
 	"time"
 	"unsafe"
 )
 
 type Switcher struct {
-	switchDelay            time.Duration
-	focusTaskbarBeforeMove bool
-	direct                 *directDesktopSwitcher
+	switchDelay time.Duration
+	direct      *directDesktopSwitcher
 }
 
 func (s *Switcher) SwitchToDesktop(target int, trigger Hotkey) error {
@@ -36,10 +34,6 @@ func (s *Switcher) SwitchToDesktop(target int, trigger Hotkey) error {
 		return nil
 	}
 
-	if s.focusTaskbarBeforeMove {
-		focusTaskbar()
-	}
-
 	// If the hotkey modifier is still logically down, it can become an extra
 	// modifier on Win+Ctrl+Left/Right. Release it before sending navigation.
 	_ = releaseModifiers(trigger.Modifiers)
@@ -62,18 +56,6 @@ func (s *Switcher) SwitchToDesktop(target int, trigger Hotkey) error {
 	}
 
 	return nil
-}
-
-func focusTaskbar() {
-	className, err := syscall.UTF16PtrFromString("Shell_TrayWnd")
-	if err != nil {
-		return
-	}
-
-	hwnd, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(className)), 0)
-	if hwnd != 0 {
-		procSetForegroundWindow.Call(hwnd)
-	}
 }
 
 func releaseModifiers(modifiers uint32) error {

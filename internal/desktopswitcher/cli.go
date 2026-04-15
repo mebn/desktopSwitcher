@@ -11,12 +11,10 @@ import (
 )
 
 type cliFlags struct {
-	configPath         string
-	openConfig         bool
-	enableAutostart    bool
-	disableAutostart   bool
-	printDefaultConfig bool
-	help               bool
+	openConfig       bool
+	enableAutostart  bool
+	disableAutostart bool
+	help             bool
 
 	set *flag.FlagSet
 }
@@ -25,11 +23,9 @@ func newFlags() *cliFlags {
 	options := &cliFlags{}
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
-	flags.StringVar(&options.configPath, "config", "", "path to a TOML config file")
 	flags.BoolVar(&options.openConfig, "open-config", false, "open the TOML config file in VISUAL, EDITOR, or notepad, then exit")
 	flags.BoolVar(&options.enableAutostart, "enable-autostart", false, "enable launch at Windows sign-in, then exit")
 	flags.BoolVar(&options.disableAutostart, "disable-autostart", false, "disable launch at Windows sign-in, then exit")
-	flags.BoolVar(&options.printDefaultConfig, "print-default-config", false, "print the default TOML config and exit")
 	flags.BoolVar(&options.help, "help", false, "show help and exit")
 	flags.Usage = options.usage
 	options.set = flags
@@ -41,9 +37,9 @@ func (f *cliFlags) parse(args []string) error {
 }
 
 func (f *cliFlags) usage() {
-	defaultPath, err := resolveConfigPath("")
+	defaultPath, err := resolveConfigPath()
 	if err != nil {
-		defaultPath = filepath.Join("%APPDATA%", appName, configFileName)
+		defaultPath = `%APPDATA%\` + appName + `\` + configFileName
 	}
 
 	exeName := filepath.Base(os.Args[0])
@@ -57,55 +53,15 @@ Normal run:
     %s
 
 Flags:
-  --config <path>
-      Path to a TOML config file.
   --open-config
-      Open the resolved config file in VISUAL, EDITOR, or notepad, then exit.
+      Open the resolved config file in default editor, then exit.
   --enable-autostart
       Enable launch at Windows sign-in, then exit.
   --disable-autostart
       Disable launch at Windows sign-in, then exit.
-  --print-default-config
-      Print the default TOML config and exit.
   --help
       Show this help and exit.
-
-Examples:
-  %s
-  %s --config C:\path\to\config.toml
-  %s --open-config
-  %s --enable-autostart
-  %s --disable-autostart
-
-Editor selection:
-  --open-config uses VISUAL, then EDITOR, then notepad.
-
-Autostart:
-  --enable-autostart writes a HKCU Run entry for the current executable.
-  The Run command includes --config with the resolved config path.
-`, appName, exeName, defaultPath, exeName, exeName, exeName, exeName, exeName)
-}
-
-func validateFlagStyle(args []string) error {
-	for _, arg := range args {
-		if arg == "" || arg == "--" {
-			return nil
-		}
-		if !strings.HasPrefix(arg, "-") || strings.HasPrefix(arg, "--") {
-			continue
-		}
-
-		name := strings.TrimPrefix(arg, "-")
-		if before, _, ok := strings.Cut(name, "="); ok {
-			name = before
-		}
-		if len([]rune(name)) == 1 {
-			return fmt.Errorf("single-letter flags are not supported yet; use --help")
-		}
-		return fmt.Errorf("long flags must use two dashes: use --%s", name)
-	}
-
-	return nil
+`, appName, exeName, defaultPath)
 }
 
 func openConfigInEditor(path string) error {

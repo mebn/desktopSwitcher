@@ -22,9 +22,6 @@ func Run(args []string) error {
 	runtime.LockOSThread()
 
 	flags := newFlags()
-	if err := validateFlagStyle(args); err != nil {
-		return err
-	}
 	if err := flags.parse(args); err != nil {
 		return err
 	}
@@ -38,11 +35,7 @@ func Run(args []string) error {
 		return fmt.Errorf("--enable-autostart and --disable-autostart cannot be used together")
 	}
 
-	if flags.printDefaultConfig {
-		return writeConfig(os.Stdout, defaultConfig())
-	}
-
-	configPath, err := resolveConfigPath(flags.configPath)
+	configPath, err := resolveConfigPath()
 	if err != nil {
 		return fmt.Errorf("resolve config path: %w", err)
 	}
@@ -60,10 +53,10 @@ func Run(args []string) error {
 	}
 
 	if flags.enableAutostart {
-		if err := enableAutostart(configPath); err != nil {
+		if err := enableAutostart(); err != nil {
 			return fmt.Errorf("enable autostart: %w", err)
 		}
-		fmt.Printf("Autostart enabled for %s using %s.\n", appName, configPath)
+		fmt.Printf("Autostart enabled for %s.\n", appName)
 		return nil
 	}
 
@@ -74,7 +67,7 @@ func Run(args []string) error {
 		return nil
 	}
 
-	cfg, cfgSource, err := loadConfig(configPath)
+	cfg, _, err := loadConfig(configPath)
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
@@ -111,7 +104,7 @@ func Run(args []string) error {
 	}
 
 	var directSwitcher *directDesktopSwitcher
-	if cfg.DirectSwitching && comInitialized {
+	if comInitialized {
 		directSwitcher, err = newDirectDesktopSwitcher()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Direct desktop switching unavailable: %v\n", err)
@@ -121,21 +114,9 @@ func Run(args []string) error {
 	}
 
 	switcher := &Switcher{
-		switchDelay:            time.Duration(cfg.SwitchDelayMs) * time.Millisecond,
-		focusTaskbarBeforeMove: cfg.FocusTaskbarBeforeSwitch,
-		direct:                 directSwitcher,
+		switchDelay: 75 * time.Millisecond,
+		direct:      directSwitcher,
 	}
-
-	fmt.Printf("DesktopSwitcher running with %s.\n", cfgSource)
-	if directSwitcher != nil {
-		fmt.Printf("Direct desktop switching enabled (%s).\n", directSwitcher.variant.name)
-	} else {
-		fmt.Println("Direct desktop switching disabled; falling back to Win+Ctrl+Arrow stepping.")
-	}
-	for _, hk := range hotkeys {
-		fmt.Printf("  %s -> desktop %d\n", hk.Spec, hk.Desktop)
-	}
-	fmt.Println("Press Ctrl+C to quit.")
 
 	if err := messageLoop(registered, switcher); err != nil {
 		return fmt.Errorf("message loop: %w", err)

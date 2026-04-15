@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func enableAutostart(configPath string) error {
+func enableAutostart() error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return err
@@ -17,12 +17,7 @@ func enableAutostart(configPath string) error {
 		return err
 	}
 
-	configPath, err = filepath.Abs(configPath)
-	if err != nil {
-		return err
-	}
-
-	commandLine := quoteWindowsArg(exePath) + " --config " + quoteWindowsArg(configPath)
+	commandLine := quoteWindowsArg(exePath)
 	return setRegistryStringValue(
 		hkeyCurrentUser,
 		`Software\Microsoft\Windows\CurrentVersion\Run`,
