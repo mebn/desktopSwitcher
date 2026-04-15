@@ -1,0 +1,5 @@
+.gocache
+.DS_Store
+.env
+*.exe
+.codex
