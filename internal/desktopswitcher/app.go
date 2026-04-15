@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"time"
 )
 
 const appName = "DesktopSwitcher"
@@ -97,25 +96,20 @@ func Run(args []string) error {
 
 	comInitialized, err := initializeCOM()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Direct desktop switching unavailable: initialize COM: %v\n", err)
+		return fmt.Errorf("direct desktop switching unavailable: initialize COM: %w", err)
 	}
 	if comInitialized {
 		defer procCoUninitialize.Call()
 	}
 
-	var directSwitcher *directDesktopSwitcher
-	if comInitialized {
-		directSwitcher, err = newDirectDesktopSwitcher()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Direct desktop switching unavailable: %v\n", err)
-		} else {
-			defer directSwitcher.Close()
-		}
+	directSwitcher, err := newDirectDesktopSwitcher()
+	if err != nil {
+		return fmt.Errorf("direct desktop switching unavailable: %w", err)
 	}
+	defer directSwitcher.Close()
 
 	switcher := &Switcher{
-		switchDelay: 75 * time.Millisecond,
-		direct:      directSwitcher,
+		direct: directSwitcher,
 	}
 
 	if err := messageLoop(registered, switcher); err != nil {

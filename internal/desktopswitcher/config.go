@@ -3,10 +3,8 @@ package desktopswitcher
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -21,19 +19,24 @@ type configFile struct {
 	Hotkeys map[string]int
 }
 
-func defaultConfig() Config {
-	hotkeys := make(map[string]int, 9)
-	for i := 1; i <= 9; i++ {
-		hotkeys[fmt.Sprintf("alt+%d", i)] = i
-	}
-
-	return Config{
-		Hotkeys: hotkeys,
-	}
+func defaultConfig() string {
+	return `[hotkeys]
+"alt+1" = 1
+"alt+2" = 2
+"alt+3" = 3
+"alt+4" = 4
+"alt+5" = 5
+"alt+6" = 6
+"alt+7" = 7
+"alt+8" = 8
+"alt+9" = 9
+`
 }
 
 func loadConfig(path string) (Config, string, error) {
-	cfg := defaultConfig()
+	cfg := Config{
+		Hotkeys: map[string]int{},
+	}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -81,27 +84,8 @@ func ensureConfigFile(path string) error {
 	}
 	defer file.Close()
 
-	return writeConfig(file, defaultConfig())
-}
-
-func writeConfig(out io.Writer, cfg Config) error {
-	if _, err := fmt.Fprintln(out, "[hotkeys]"); err != nil {
-		return err
-	}
-
-	specs := make([]string, 0, len(cfg.Hotkeys))
-	for spec := range cfg.Hotkeys {
-		specs = append(specs, spec)
-	}
-	sort.Strings(specs)
-
-	for _, spec := range specs {
-		if _, err := fmt.Fprintf(out, "%q = %d\n", spec, cfg.Hotkeys[spec]); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	_, err = file.WriteString(defaultConfig())
+	return err
 }
 
 func parseConfigTOML(data string, cfg *configFile) error {

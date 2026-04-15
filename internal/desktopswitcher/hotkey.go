@@ -241,7 +241,7 @@ func messageLoop(bindings map[uintptr]binding, switcher *Switcher) error {
 			continue
 		}
 
-		if err := switcher.SwitchToDesktop(binding.Hotkey.Desktop, binding.Hotkey); err != nil {
+		if err := switcher.SwitchToDesktop(binding.Hotkey.Desktop); err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", binding.Hotkey.Spec, err)
 		}
 	}
