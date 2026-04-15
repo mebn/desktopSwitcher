@@ -18,15 +18,9 @@ const (
 	wmHotkey = 0x0312
 	wmQuit   = 0x0012
 
-	inputKeyboard  = 1
-	keyeventfKeyUp = 0x0002
-
 	vkBack     = 0x08
 	vkTab      = 0x09
 	vkReturn   = 0x0D
-	vkShift    = 0x10
-	vkControl  = 0x11
-	vkMenu     = 0x12
 	vkCapsLock = 0x14
 	vkEscape   = 0x1B
 	vkSpace    = 0x20
@@ -40,8 +34,6 @@ const (
 	vkDown     = 0x28
 	vkInsert   = 0x2D
 	vkDelete   = 0x2E
-	vkLWin     = 0x5B
-	vkRWin     = 0x5C
 	vkNumpad0  = 0x60
 	vkF1       = 0x70
 
@@ -61,13 +53,10 @@ var (
 	advapi32 = syscall.NewLazyDLL("advapi32.dll")
 	ole32    = syscall.NewLazyDLL("ole32.dll")
 
-	procRegisterHotKey      = user32.NewProc("RegisterHotKey")
-	procUnregisterHotKey    = user32.NewProc("UnregisterHotKey")
-	procGetMessageW         = user32.NewProc("GetMessageW")
-	procPostThreadMessageW  = user32.NewProc("PostThreadMessageW")
-	procSendInput           = user32.NewProc("SendInput")
-	procFindWindowW         = user32.NewProc("FindWindowW")
-	procSetForegroundWindow = user32.NewProc("SetForegroundWindow")
+	procRegisterHotKey     = user32.NewProc("RegisterHotKey")
+	procUnregisterHotKey   = user32.NewProc("UnregisterHotKey")
+	procGetMessageW        = user32.NewProc("GetMessageW")
+	procPostThreadMessageW = user32.NewProc("PostThreadMessageW")
 
 	procGetCurrentThreadID   = kernel32.NewProc("GetCurrentThreadId")
 	procProcessIDToSessionID = kernel32.NewProc("ProcessIdToSessionId")
@@ -96,21 +85,6 @@ type msg struct {
 	LParam  uintptr
 	Time    uint32
 	Pt      point
-}
-
-type keyboardInput struct {
-	WVk         uint16
-	WScan       uint16
-	DwFlags     uint32
-	Time        uint32
-	DwExtraInfo uintptr
-}
-
-type input struct {
-	Type uint32
-	_    uint32
-	Ki   keyboardInput
-	_    [8]byte
 }
 
 type guid struct {

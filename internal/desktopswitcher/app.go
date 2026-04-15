@@ -102,15 +102,11 @@ func Run(args []string) error {
 		defer procCoUninitialize.Call()
 	}
 
-	directSwitcher, err := newDirectDesktopSwitcher()
+	switcher, err := newSwitcher()
 	if err != nil {
 		return fmt.Errorf("direct desktop switching unavailable: %w", err)
 	}
-	defer directSwitcher.Close()
-
-	switcher := &Switcher{
-		direct: directSwitcher,
-	}
+	defer switcher.Close()
 
 	if err := messageLoop(registered, switcher); err != nil {
 		return fmt.Errorf("message loop: %w", err)
