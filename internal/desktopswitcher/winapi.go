@@ -3,12 +3,6 @@ package desktopswitcher
 import "syscall"
 
 const (
-	sOK    = 0
-	sFalse = 1
-
-	coinitApartmentThreaded = 0x2
-	clsctxLocalServer       = 0x4
-
 	modAlt      = 0x0001
 	modControl  = 0x0002
 	modShift    = 0x0004
@@ -51,12 +45,17 @@ var (
 	user32   = syscall.NewLazyDLL("user32.dll")
 	kernel32 = syscall.NewLazyDLL("kernel32.dll")
 	advapi32 = syscall.NewLazyDLL("advapi32.dll")
-	ole32    = syscall.NewLazyDLL("ole32.dll")
 
-	procRegisterHotKey     = user32.NewProc("RegisterHotKey")
-	procUnregisterHotKey   = user32.NewProc("UnregisterHotKey")
-	procGetMessageW        = user32.NewProc("GetMessageW")
-	procPostThreadMessageW = user32.NewProc("PostThreadMessageW")
+	procRegisterHotKey      = user32.NewProc("RegisterHotKey")
+	procUnregisterHotKey    = user32.NewProc("UnregisterHotKey")
+	procGetMessageW         = user32.NewProc("GetMessageW")
+	procPostThreadMessageW  = user32.NewProc("PostThreadMessageW")
+	procEnumWindows         = user32.NewProc("EnumWindows")
+	procFindWindowW         = user32.NewProc("FindWindowW")
+	procSetForegroundWindow = user32.NewProc("SetForegroundWindow")
+	procGetForegroundWindow = user32.NewProc("GetForegroundWindow")
+	procIsIconic            = user32.NewProc("IsIconic")
+	procIsWindowVisible     = user32.NewProc("IsWindowVisible")
 
 	procGetCurrentThreadID   = kernel32.NewProc("GetCurrentThreadId")
 	procProcessIDToSessionID = kernel32.NewProc("ProcessIdToSessionId")
@@ -67,10 +66,6 @@ var (
 	procRegSetValueExW   = advapi32.NewProc("RegSetValueExW")
 	procRegDeleteValueW  = advapi32.NewProc("RegDeleteValueW")
 	procRegCloseKey      = advapi32.NewProc("RegCloseKey")
-
-	procCoInitializeEx   = ole32.NewProc("CoInitializeEx")
-	procCoUninitialize   = ole32.NewProc("CoUninitialize")
-	procCoCreateInstance = ole32.NewProc("CoCreateInstance")
 )
 
 type point struct {
@@ -85,13 +80,6 @@ type msg struct {
 	LParam  uintptr
 	Time    uint32
 	Pt      point
-}
-
-type guid struct {
-	Data1 uint32
-	Data2 uint16
-	Data3 uint16
-	Data4 [8]byte
 }
 
 func getCurrentThreadID() uint32 {

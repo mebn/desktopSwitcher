@@ -15,12 +15,20 @@ type Hotkey struct {
 	VK        uint32
 	Modifiers uint32
 	Desktop   int
+	Action    HotkeyAction
 }
 
 type binding struct {
 	ID     int
 	Hotkey Hotkey
 }
+
+type HotkeyAction int
+
+const (
+	hotkeyActionSwitch HotkeyAction = iota
+	hotkeyActionMoveAndFollow
+)
 
 func compileHotkeys(configured map[string]int) ([]Hotkey, error) {
 	specs := make([]string, 0, len(configured))
@@ -43,6 +51,7 @@ func compileHotkeys(configured map[string]int) ([]Hotkey, error) {
 		}
 		hk.Spec = normalizeHotkeySpec(spec)
 		hk.Desktop = desktop
+		hk.Action = hotkeyActionForModifiers(hk.Modifiers)
 
 		key := fmt.Sprintf("%d:%d", hk.Modifiers, hk.VK)
 		if seen[key] {
@@ -118,6 +127,13 @@ func modifierByName(name string) (uint32, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func hotkeyActionForModifiers(modifiers uint32) HotkeyAction {
+	if modifiers&modAlt != 0 && modifiers&modShift != 0 {
+		return hotkeyActionMoveAndFollow
+	}
+	return hotkeyActionSwitch
 }
 
 func virtualKeyByName(name string) (uint32, error) {
@@ -241,8 +257,16 @@ func messageLoop(bindings map[uintptr]binding, switcher *Switcher) error {
 			continue
 		}
 
-		if err := switcher.SwitchToDesktop(binding.Hotkey.Desktop); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", binding.Hotkey.Spec, err)
+		var switchErr error
+		switch binding.Hotkey.Action {
+		case hotkeyActionMoveAndFollow:
+			switchErr = switcher.MoveCurrentWindowToDesktopAndSwitch(binding.Hotkey.Desktop)
+		default:
+			switchErr = switcher.SwitchToDesktop(binding.Hotkey.Desktop)
+		}
+
+		if switchErr != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", binding.Hotkey.Spec, switchErr)
 		}
 	}
 }

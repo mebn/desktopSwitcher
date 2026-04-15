@@ -30,6 +30,15 @@ func defaultConfig() string {
 "alt+7" = 7
 "alt+8" = 8
 "alt+9" = 9
+"alt+shift+1" = 1
+"alt+shift+2" = 2
+"alt+shift+3" = 3
+"alt+shift+4" = 4
+"alt+shift+5" = 5
+"alt+shift+6" = 6
+"alt+shift+7" = 7
+"alt+shift+8" = 8
+"alt+shift+9" = 9
 `
 }
 

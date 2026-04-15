@@ -94,17 +94,9 @@ func Run(args []string) error {
 	}
 	defer unregisterHotkeys(registered)
 
-	comInitialized, err := initializeCOM()
-	if err != nil {
-		return fmt.Errorf("direct desktop switching unavailable: initialize COM: %w", err)
-	}
-	if comInitialized {
-		defer procCoUninitialize.Call()
-	}
-
 	switcher, err := newSwitcher()
 	if err != nil {
-		return fmt.Errorf("direct desktop switching unavailable: %w", err)
+		return fmt.Errorf("desktop switching unavailable: %w", err)
 	}
 	defer switcher.Close()
 
